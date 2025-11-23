@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project 1 - Color Catcher</title>
+    <script type="text/javascript" src="./Common/webgl-utils.js"></script>
+    <script type="text/javascript" src="./Common/initShaders.js"></script>
+    <script type="text/javascript" src="./Common/MV.js"></script>
+    <script type="text/javascript" src="color-catcher.js"></script>
+</head>
+<body style="margin:0; overflow:hidden;">
+    <canvas id="gl-canvas"></canvas>
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        attribute vec4 vPosition;
+        attribute vec3 vColor;
+        varying vec3 fColor;
+        uniform mat4 uTranslation;
+
+        void main() {
+            gl_Position = uTranslation * vPosition;
+            fColor = vColor;
+        }
+    </script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+        varying vec3 fColor;
+
+        void main() {
+            gl_FragColor = vec4(fColor, 1.0);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+Project #1
+
+For Project 1 create a 2D game. The basic expectation is for the game to be in WebGL. However, I am flexible to the choice of the environment, 
+as long as you provide me a mechanism to be able to grade your game rapidly, e.g., at the very least, accompany your submission with a video demo of your game 
+if you do it in an environment other than WebGL. 
+
+[Please note that if you use an environment other than WebGL, I may not be able to assist you with debugging, since the expectation for the project is that you can 
+design a game in WebGL, where I am committed to offer assistance. However, as always, I will try to offer you assistance to the best of my abilities.]
+
+You are recommended to work on this project in a team of two. If you have a teammate you would like to work with, DM me on Slackk with the teammate included. 
+If you do not have a teammate, I will assign a teammate to you at random. Under [extremely] exigent circumstances, 
+I am willing to consider single-person teams, though you will want to make your case clear, e.g., you have a certain creative vision [that you must articulate] 
+that requires you to work on your own, or a set of assets or programming environment that you are well-familiar with, and you suspect may not be something 
+that you can expect another teammate to pick up rapidly [though again, you have to make a case for why your assets or environment would be difficult to 
+pick up, e.g., Unity cannot count for single-person as a it has a set of tutorials for rapid familiarity.]
+
+Criteria for the game:
+1) The Game should have more than 5 2D polygons in the duration of the game.
+2) The Game should have more than 3 colors.
+3) The Game should have a scoring system and win condition.
+4) The player must interact with the game to score using a mouse, a keyboard, or event-driven input, e.g. sliders and buttons.
+5) The Game Controls should be intuitive to use and have a description of the controls in a file named README.txt.
+6) Provide a description in README.txt on how you implemented the your game.
+
+As always with this class, your creative vision comes first. If you have a vision that is mind-blowing and falls 'short' of the criteria listed, that's fine, as long as I can see that your 
+output is indeed mind-blowing. 
+
+There are no templates provided for the project. If you have a .js file, please provide your name within the .js file. If you have put all your implementation in a .html file (with no .js 
+files), please put your name in comments in the .html file. Also, include your name in README.txt.
+Some Examples:
+-Galaga
+-Helicopter
+-Pong
+
+Scoring rubric (out of 20 points):
+1) 4 points for polygon creation
+2) 4 points for coloring polygons
+3) 2 points for the scoring system
+4) 2 points for the win condition
+5) 4 points for player controls and interaction
+6) 4 points for the description on how you implemented the game
+
+Deliverables: Store all files and folders you use (including your Common/ folder or any folders that contain your Common/ folder) in a single directory called 
+'project1/'. Zip 'project1/' into a single .zip file called 'project1.zip'. Please submit 'project1.zip' to Pilot by the due date. If you do not follow these 
+instructions, you stand to lose all points pertaining to running of the code, i.e., all points for parts 1 to 5 in the scoring rubric.
