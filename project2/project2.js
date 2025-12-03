@@ -1,7 +1,15 @@
 var gl;
 var myShaderProgramLight;
 var myShaderProgramView;
-var alpha, beta;
+var alpha = 0.0, beta = 0.3; // initial rotation
+var radius = 5.0;            // distance from table center
+var canvas;
+var cubeRotX = 0.0;
+var cubeRotY = 0.0;
+var cubePosX = 0.0;
+var cubePosY = 0.75; // start just above table
+
+
 
 function drawTable() {
 
@@ -12,8 +20,8 @@ function drawTable() {
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
     gl.enable(gl.DEPTH_TEST);
 
-    alpha = 0.6;
-    beta = 0.0;
+    //alpha = 0.6;
+    //beta = 0.0;
 
     myShaderProgramView = initShaders(gl, "view-vertex-shader", "view-fragment-shader");
     //myShaderProgramLight = initShaders(gl, "light-vertex-shader", "light-fragment-shader");
@@ -105,8 +113,9 @@ function drawTable() {
     gl.enableVertexAttribArray(k);
 
     // ---------- Camera ----------
-    var eye = vec3(2.0, 3.0, 2.0); // higher and slightly to the side
-    var at  = vec3(0.0, 0.3, 0.0); // looking at the center of the table
+    //var eye = vec3(2.0, 3.0, 2.0); // higher and slightly to the side
+    var eye = vec3(0.0, 5.0, 0.0);   // straight above the table
+    var at  = vec3(0.0, 0.55, 0.0);  // looking at the center of the table top
     var vup = vec3(0,0,-1.0);
     var n = normalize(subtract(eye,at));
     var u = normalize(cross(vup,n));
@@ -119,8 +128,8 @@ function drawTable() {
         -dot(u,eye), -dot(v,eye), -dot(n,eye), 1
     ];
 
-    var near = 0.1, far = 10.0;
-    var right = 1, top = 1;
+    var near = 0.1, far = 20.0;
+    var right = 2, top = 2;
     var P = [
         near/right,0,0,0,
         0,near/top,0,0,
@@ -162,4 +171,64 @@ function drawTable() {
     drawCubeModel([0.65, 0.25, -0.45], [0.1, 0.5, 0.1]);
     drawCubeModel([-0.65, 0.25, -0.45], [0.1, 0.5, 0.1]);
 
+
+    // Draw interactive cube on table top
+    function drawInteractiveCube() {
+        var translateVec = [cubePosX,cubePosY, 0]; // slightly above table top
+        var scaleVec = [0.3, 0.3, 0.3];  // smaller cube
+
+        var T = mat4();
+        T[0][3] = translateVec[0];
+        T[1][3] = translateVec[1];
+        T[2][3] = translateVec[2];
+
+        var S = mat4(
+            scaleVec[0],0,0,0,
+            0,scaleVec[1],0,0,
+            0,0,scaleVec[2],0,
+            0,0,0,1
+        );
+        var Rx = mat4(
+            1,0,0,0,
+            0,Math.cos(cubeRotX),-Math.sin(cubeRotX),0,
+            0,Math.sin(cubeRotX), Math.cos(cubeRotX),0,
+            0,0,0,1
+        );
+
+        var Ry = mat4(
+            Math.cos(cubeRotY),0,Math.sin(cubeRotY),0,
+            0,1,0,0,
+            -Math.sin(cubeRotY),0,Math.cos(cubeRotY),0,
+            0,0,0,1
+        );
+
+        var model = mult(T, mult(Ry, mult(Rx, S)));
+        gl.uniformMatrix4fv(uModel,false,flatten(model));
+        gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_BYTE, 0);
+    }
+    drawInteractiveCube();
+
+
 }
+
+
+
+
+window.addEventListener("keydown", function(event) {
+    switch(event.key) {
+        case "ArrowLeft":  cubeRotY -= 0.05; break;  // rotate left
+        case "ArrowRight": cubeRotY += 0.05; break;  // rotate right
+        case "ArrowUp":    cubeRotX -= 0.05; break;  // rotate up
+        case "ArrowDown":  cubeRotX += 0.05; break;  // rotate down
+
+
+        case "a": cubePosX -= 0.05; break; // left
+        case "d": cubePosX += 0.05; break; // right
+        case "q": cubePosY += 0.05; break; // up
+        case "e": cubePosY -= 0.05; break; // down
+    }
+    cubeRotX = Math.min(Math.max(cubeRotX, -Math.PI/2), Math.PI/2); // clamp X rotation
+    cubePosY = Math.max(cubePosY, 0.05);
+    drawTable();  // redraw scene
+});
+
