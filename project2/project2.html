@@ -2,25 +2,31 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Simple Table</title>
+    <title>Table Scene</title>
 
-    <script id="vertex-shader" type="x-shader/x-vertex">
-        precision mediump float;
-
-        attribute vec4 vPosition;
-
-        uniform mat4 M;   // modelview
-        uniform mat4 P;   // projection
-
+    <script id="view-vertex-shader" type="x-shader/x-vertex">
+        attribute vec4 vertexPosition;
+        attribute vec3 nv;
+        attribute vec3 k;
+        uniform mat4 M, P;
+        varying vec3 ka, kd;
+        varying vec3 fNormal;
         void main() {
-            gl_Position = P * M * vPosition;
+            gl_Position = P * M * vertexPosition;
+            ka = k;
+            kd = k;
+            fNormal = nv;
         }
     </script>
 
-    <script id="fragment-shader" type="x-shader/x-fragment">
+    <script id="view-fragment-shader" type="x-shader/x-fragment">
         precision mediump float;
+        varying vec3 ka, kd;
+        varying vec3 fNormal;
         void main() {
-            gl_FragColor = vec4(0.6, 0.3, 0.1, 1.0); // brown tabletop
+            vec3 lightDir = normalize(vec3(1,1,1));
+            float diff = max(dot(normalize(fNormal), lightDir),0.0);
+            gl_FragColor = vec4(kd*diff + ka*0.2, 1.0);
         }
     </script>
 
@@ -28,10 +34,8 @@
     <script type="text/javascript" src="../Common/initShaders.js"></script>
     <script type="text/javascript" src="../Common/MV.js"></script>
     <script type="text/javascript" src="project2.js"></script>
-
 </head>
-
-<body onload="start()">
-    <canvas id="gl-canvas" width="600" height="600"></canvas>
+<body onload="drawTable()">
+    <canvas id="gl-canvas" width="1024" height="1024"></canvas>
 </body>
 </html>
