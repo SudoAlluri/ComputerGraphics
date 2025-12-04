@@ -3,8 +3,8 @@ var gl, program, canvas;
 
 // Player/cube state
 var cubeRotX = 0.0, cubeRotY = 0.0;
-var cubePosX = 0.0, cubePosY = 0.75, cubePosZ = 0.0;
-var cubeScale = 0.35;
+var cubePosX = 0.0, cubePosY = 0.5, cubePosZ = 0.0;
+var cubeScale = 0.25;
 var scaleStep = 0.05;
 
 // Camera state
@@ -108,10 +108,10 @@ function buildModelMatrix(translate, scale, rotX, rotY) {
 function getCameraMatrix() {
     var eye = vec3(
         camRadius * Math.sin(camAngleX) * Math.cos(camAngleY),
-        camRadius * Math.sin(camAngleY) + 0.75,
+        camRadius * Math.sin(camAngleY) + 1.0,
         camRadius * Math.cos(camAngleX) * Math.cos(camAngleY)
     );
-    var at = vec3(0.0, 0.55, 0.0);
+    var at = vec3(0.25, 0.50, 0.0);
     var vup = vec3(0, 1, 0);
 
     var nVec = normalize(subtract(eye, at));
@@ -182,6 +182,37 @@ function createCheckerboardTexture() {
     return texture;
 }
 
+function createWoodGrainTexture() {
+    var size = 128;
+    var data = new Uint8Array(size * size * 4);
+    var index = 0;
+    for (var i = 0; i < size; i++) {
+        for (var j = 0; j < size; j++) {
+            // Create wood grain effect with varying horizontal stripes
+            var stripe = Math.floor(i / 4) % 8;
+            var variation = Math.sin(j * 0.05 + stripe * 0.5) * 20;
+            var baseColor = 160 + variation;
+            var r = Math.floor(baseColor * 0.8);
+            var g = Math.floor(baseColor * 0.6);
+            var b = Math.floor(baseColor * 0.3);
+            
+            data[index++] = Math.max(0, Math.min(255, r));
+            data[index++] = Math.max(0, Math.min(255, g));
+            data[index++] = Math.max(0, Math.min(255, b));
+            data[index++] = 255;
+        }
+    }
+    
+    var texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    
+    return texture;
+}
 
 // ==================== RENDERING ====================
 function drawCube(translate, scale, color, rotX, rotY, textureId) {
@@ -201,27 +232,65 @@ function drawCube(translate, scale, color, rotX, rotY, textureId) {
     gl.drawElements(gl.TRIANGLES, buffers.numIndices, gl.UNSIGNED_BYTE, 0);
 }
 
+function drawChair(translate, rotY, textureId) {
+    rotY = rotY || 0;
+    textureId = textureId || 'wood';
+    
+    // Chair seat
+    drawCube([translate[0], translate[1] + 0.35, translate[2]], [0.35, 0.08, 0.35], [0.55, 0.35, 0.15], 0, rotY, textureId);
+    
+    // Chair backrest drawcube(translate, scale, color, rotX, rotY, textureId)
+    //drawCube([translate[0], translate[1] + 0.50, translate[2] - 0.15], [0.35, 0.4, 0.08], [0.55, 0.35, 0.15], 0, rotY, textureId);
+    
+    // Chair backrest - positioned in front of seat, facing outward from table
+    // Offset is always in the -Z direction in local chair space, then rotated
+    var backrestLocalZ = 0.17;
+    var backrestX = translate[0] + backrestLocalZ * Math.sin(rotY);
+    var backrestZ = translate[2] + backrestLocalZ * Math.cos(rotY);
+    drawCube([backrestX, translate[1] + 0.55, backrestZ], [0.35, 0.35, 0.08], [0.55, 0.35, 0.15], 0, rotY, textureId);
+
+
+
+    // Chair legs (4 small cubes)
+    var legOffset = 0.12;
+    drawCube([translate[0] - legOffset, translate[1] + 0.15, translate[2] - legOffset], [0.08, 0.3, 0.08], [0.4, 0.25, 0.12], 0, rotY, textureId); // Front-left leg
+    drawCube([translate[0] + legOffset, translate[1] + 0.15, translate[2] - legOffset], [0.08, 0.3, 0.08], [0.4, 0.25, 0.12], 0, rotY, textureId); // Front-right leg
+    drawCube([translate[0] - legOffset, translate[1] + 0.15, translate[2] + legOffset], [0.08, 0.3, 0.08], [0.4, 0.25, 0.12], 0, rotY, textureId); // Back-left leg
+    drawCube([translate[0] + legOffset, translate[1] + 0.15, translate[2] + legOffset], [0.08, 0.3, 0.08], [0.4, 0.25, 0.12], 0, rotY, textureId); // Back-right leg
+
+}
+
+
 function drawSceneObjects() {
+    // Floor
+    drawCube([0, -0.02, 0], [5.0, 0.04, 5.0], [0.7, 0.7, 0.7], 0, 0, 'checkerboard');
+
     // Table top
-    drawCube([0, 0.55, 0], [3.5, 0.36, 1.5], [0.4, 2.0, 0.54], 0, 0, 'checkerboard');
+    drawCube([0, 0.55, 0], [3.0, 0.15, 1.5], [1.0, 1.0, 1.0], 0, 0, 'woodgrain');
 
     // Table legs
     var legScale = [0.25, 1.0, 0.25];
-    var legY = 0.09;
+    var legY = 0.05;
     drawCube([1.0, legY, 0.5], legScale, [0.47, 0.30, 0.18], 0, 0, 'wood');
     drawCube([-1.0, legY, 0.5], legScale, [0.47, 0.30, 0.18], 0, 0, 'wood');
     drawCube([1.0, legY, -0.5], legScale, [0.47, 0.30, 0.18], 0, 0, 'wood');
     drawCube([-1.0, legY, -0.5], legScale, [0.47, 0.30, 0.18], 0, 0, 'wood');
 
+    // Chairs around the table
+    drawChair([0, 0, 1.2], 0, 'wood');                    // Front chair
+    drawChair([0, 0, -1.2], Math.PI, 'wood');             // Back chair
+    drawChair([2.0, 0, 0], Math.PI / 2, 'wood');          // Right chair
+    drawChair([-2.0, 0, 0], -Math.PI / 2, 'wood');        // Left chair
+
     // Player cube (red)
-    drawCube([cubePosX, 0.85, cubePosZ], [cubeScale, cubeScale, cubeScale], [0.9, 0.08, 0.08], cubeRotX, cubeRotY, 'red');
+    drawCube([cubePosX, 0.65, cubePosZ], [cubeScale, cubeScale, cubeScale], [0.9, 0.08, 0.08], cubeRotX, cubeRotY, 'red');
 
     // Static cubes
-    drawCube([0.15, 0.85, -0.25], [0.35, 0.35, 0.35], [0.05, 0.55, 0.18], 0, 0, 'green');
-    drawCube([0.55, 0.85, -0.05], [0.35, 0.35, 0.35], [0.94, 0.82, 0.12], 0, 0, 'yellow');
+    drawCube([0.3, 0.65, 0.0], [0.25, 0.25, 0.25], [0.05, 0.55, 0.18], 0, 0, 'green');
+    drawCube([0.6, 0.65, 0.0], [0.25, 0.25, 0.25], [0.94, 0.82, 0.12], 0, 0, 'yellow');
 
     // Goal outline
-    var goalCenter = [0.12, 0.565, 0.05];
+    var goalCenter = [0.5, 0.65, 0.3];
     var stripThickness = [0.28, 0.02, 0.02];
     var stripVert = [0.02, 0.02, 0.28];
     drawCube([goalCenter[0], goalCenter[1], goalCenter[2] - 0.14], stripThickness, [1, 1, 1], 0, 0, 'white');
@@ -303,6 +372,7 @@ function init() {
     // Create textures
     textures['wood'] = createSolidColorTexture(0.47, 0.30, 0.18);
     textures['checkerboard'] = createCheckerboardTexture();
+    textures['woodgrain'] = createWoodGrainTexture();
     textures['red'] = createSolidColorTexture(0.9, 0.08, 0.08);
     textures['green'] = createSolidColorTexture(0.05, 0.55, 0.18);
     textures['yellow'] = createSolidColorTexture(0.94, 0.82, 0.12);
