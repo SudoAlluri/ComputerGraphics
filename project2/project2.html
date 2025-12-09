@@ -2,31 +2,69 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Table Scene</title>
+    <title>Tabletop Puzzle — Demo</title>
 
     <script id="view-vertex-shader" type="x-shader/x-vertex">
         attribute vec4 vertexPosition;
         attribute vec3 nv;
-        attribute vec3 k;
-        uniform mat4 M, P;
-        varying vec3 ka, kd;
+        attribute vec2 aTexCoord;
+        
+        uniform mat4 uModel;
+        uniform mat4 uView;
+        uniform mat4 uProjection;
+        
         varying vec3 fNormal;
+        varying vec2 fTexCoord;
+        varying vec3 fPosition;
+        
         void main() {
-            gl_Position = P * M * vertexPosition;
-            ka = k;
-            kd = k;
-            fNormal = nv;
+            vec4 worldPos = uModel * vertexPosition;
+            fPosition = worldPos.xyz;
+            gl_Position = uProjection * uView * worldPos;
+            fNormal = mat3(uModel) * nv;
+            fTexCoord = aTexCoord;
         }
     </script>
 
     <script id="view-fragment-shader" type="x-shader/x-fragment">
         precision mediump float;
-        varying vec3 ka, kd;
+        
         varying vec3 fNormal;
+        varying vec2 fTexCoord;
+        varying vec3 fPosition;
+        
+        uniform sampler2D uTexture;
+        uniform vec3 k;
+        uniform vec3 light1Pos;
+        uniform vec3 light2Pos;
+        uniform float uShininess;
+        
         void main() {
-            vec3 lightDir = normalize(vec3(1,1,1));
-            float diff = max(dot(normalize(fNormal), lightDir),0.0);
-            gl_FragColor = vec4(kd*diff + ka*0.2, 1.0);
+            vec3 texColor = texture2D(uTexture, fTexCoord).rgb;
+            vec3 baseColor = texColor * k;
+            
+            vec3 normal = normalize(fNormal);
+            vec3 viewDir = normalize(-fPosition);
+            
+            // Light 1 contribution
+            vec3 light1Dir = normalize(light1Pos - fPosition);
+            float diff1 = max(dot(normal, light1Dir), 0.0);
+            vec3 reflect1 = reflect(-light1Dir, normal);
+            float spec1 = pow(max(dot(viewDir, reflect1), 0.0), uShininess);
+            
+            // Light 2 contribution
+            vec3 light2Dir = normalize(light2Pos - fPosition);
+            float diff2 = max(dot(normal, light2Dir), 0.0);
+            vec3 reflect2 = reflect(-light2Dir, normal);
+            float spec2 = pow(max(dot(viewDir, reflect2), 0.0), uShininess);
+            
+            // Combine lighting - increased ambient for better visibility
+            vec3 ambient = baseColor * 0.65;
+            vec3 diffuse = baseColor * (diff1 * 0.6 + diff2 * 0.4);
+            vec3 specular = vec3(1.0) * (spec1 * 0.4 + spec2 * 0.3);
+            
+            vec3 finalColor = ambient + diffuse + specular;
+            gl_FragColor = vec4(finalColor, 1.0);
         }
     </script>
 
@@ -34,8 +72,41 @@
     <script type="text/javascript" src="../Common/initShaders.js"></script>
     <script type="text/javascript" src="../Common/MV.js"></script>
     <script type="text/javascript" src="project2.js"></script>
+
+    <style>
+      body { margin: 12px; font-family: Arial, Helvetica, sans-serif; background:#efefef; display:flex; flex-direction:column; align-items:center; }
+      canvas { border-radius:6px; box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+      .instruction { 
+        margin-top:12px; 
+        font-size:14px; 
+        font-weight:600; 
+        color:#111;
+        max-width: 700px;
+        background: white;
+        padding: 15px;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      .instruction h2 {
+        margin-top: 0;
+        color: #333;
+      }
+      .instruction p {
+        margin: 8px 0;
+        line-height: 1.5;
+      }
+    </style>
 </head>
-<body onload="drawTable()">
-    <canvas id="gl-canvas" width="1024" height="1024"></canvas>
+<body onload="init(); render();">
+    <canvas id="gl-canvas" width="700" height="700"></canvas>
+    <div class="instruction">
+        <h2>Dining Room Scene Controls</h2>
+        <p><strong>Camera rotation:</strong> Arrow keys (Up, Down, Left, Right)</p>
+        <p><strong>Camera zoom:</strong> I (zoom in), O (zoom out)</p>
+        <p><strong>Move red chair:</strong> W (forward), S (backward), A (left), D (right), Q (up), E (down)</p>
+        <p><strong>Rotate red chair:</strong> X (counterclockwise), Y (clockwise)</p>
+        <p><strong>Scale red chair:</strong> Z (shrink), C (grow)</p>
+        <p><strong>Reset scene:</strong> R</p>
+    </div>
 </body>
 </html>
