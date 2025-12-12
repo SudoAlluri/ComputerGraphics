@@ -10,3 +10,11 @@ The player uses the left and right arrow keys to move the bucket horizontally ac
 Each correctly caught triangle matching the target color earns +1 point. Catching the wrong color or missing a triangle of the correct 
 color results in -1 point and adds a strike. If the player reaches 15 points, they win the game. If the player accumulates 5 misses, 
 the game ends with a GAME OVER message.
+
+## Project 2 - 3D Scene
+An interactive 3D dining room scene rendered using WebGL with multiple polyhedron types,
+procedural textures, Phong lighting with two light sources, and camera controls, and a toggleable ceiling lamp.
+
+Restrictions: NOT permitted to use the functions 'lookAt()', 'rotate()', 'scale()', 'translate()', 'frustum()', 'ortho()', and/or 'perspective()' 
+implemented by the book authors in MV.js. If you use these functions, you stand to lose points for the operations these functions are substituted in 
+for.
