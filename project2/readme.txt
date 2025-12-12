@@ -1,10 +1,5 @@
 # DINING ROOM SCENE - README
 
-## AUTHORS: 
-- Anuja Alluri
-- Kalli koppin
-
-
 ## PROJECT OVERVIEW
 An interactive 3D dining room scene rendered using WebGL with multiple polyhedron types,
 procedural textures, Phong lighting with two light sources, and camera controls.
