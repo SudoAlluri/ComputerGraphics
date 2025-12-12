@@ -1,6 +1,6 @@
-
 //Global Variables
 var gl, program, canvas;
+var lightEnabled = true;
 
 //chair variables
 var chairPos = { x: 2.0, y: 0, z: 0 };
@@ -87,7 +87,7 @@ function createSphereGeometry(radius, latBands, longBands) {
     var indices = [];
     // math calculations for sphere
     // Only goes from 0 to PI/2 (90 degrees) for latitude to create hemisphere
-    for (var lat = 0; lat <= latBands / 2; lat++) {  // Changed: divide latBands by 2
+    for (var lat = 0; lat <= latBands / 2; lat++) {
         var theta = lat * Math.PI / latBands;
         var sinTheta = Math.sin(theta);
         var cosTheta = Math.cos(theta);
@@ -120,6 +120,7 @@ function createSphereGeometry(radius, latBands, longBands) {
     
     return { vertices: vertices, normals: normals, texcoords: texcoords, indices: indices };
 }
+
 
 //For cylinder shapes  for the lamp rod
 function createCylinderGeometry(radius, height, segments) {
@@ -653,7 +654,7 @@ function drawWalls() {
     drawCube([roomSize / 2, wall_Height / 2, 0], [wall_Thickness, wall_Height, roomSize], [0.8, 0.8, 0.9], 0, 0, "wall");
 }
 
-//
+// Draw the lamp in the room with specific dimensions and color and texture
 function drawHangingLamp() {
     const lampHeight = 2.3;
     const rodLength = 0.5;
@@ -680,9 +681,50 @@ function drawFood() {
     drawTorus([-1.1, 0.64, 0], 0.05, 0.05, [0.9, 0.7, 0.1], Math.PI , 0, 'yellow');
 }
 
+function drawWindow() {
+    // Window position (centered on back wall)
+    const winX = 0;
+    const winY = 1.3;
+    const winZ = 2.4;
+
+    const frameColor = [0.4, 0.4, 0.45];
+    
+    // glass pane
+    drawCube([winX, winY, winZ], [1.2, 0.8, 0.02], [0.7, 0.85, 1.0], 0, 0, "wall");
+
+    // vertical frame bars
+    drawCube([winX - 0.6, winY, winZ], [0.05, 0.8, 0.03], frameColor, 0, 0, "silver");
+    drawCube([winX + 0.6, winY, winZ], [0.05, 0.8, 0.03], frameColor, 0, 0, "silver");
+
+    // horizontal frame bars
+    drawCube([winX, winY + 0.4, winZ], [1.2, 0.05, 0.03], frameColor, 0, 0, "silver");
+    drawCube([winX, winY - 0.4, winZ], [1.2, 0.05, 0.03], frameColor, 0, 0, "silver");
+
+    // center cross beams
+    drawCube([winX, winY, winZ], [1.2, 0.05, 0.03], frameColor, 0, 0, "silver");
+    drawCube([winX, winY, winZ], [0.05, 0.8, 0.03], frameColor, 0, 0, "silver");
+}
+
+// allows the light to be turned on and off
+function toggleLights() {
+    lightEnabled = !lightEnabled;
+
+    if (lightEnabled) {
+        light1Pos = [2.0, 2.0, 2.0];
+        light2Pos = [-2.0, 1.5, -2.0];
+    } else {
+        // Move lights far away (no lighting effect)
+        light1Pos = [999, 999, 999];
+        light2Pos = [999, 999, 999];
+    }
+
+    render();
+}
+
 // calls all the individual scene drawing functions to render the complete scene
 function drawSceneObjects() {
     drawWalls();
+    drawWindow();
     drawCeiling();
     drawFloor();
     drawHangingLamp();
@@ -706,12 +748,12 @@ function drawSceneObjects() {
     drawCup(-0.8, -0.35);
     drawUtensils(-0.5, -0.65);
 
-//  on back left side table
+    //  on back left side table
     drawPlate(0.4, -0.40);
     drawCup(0.1, -0.35);
     drawUtensils(0.4, -0.65);
 
-//  on right side table
+    //  on right side table
     drawPlate(1.2, 0);
     drawCup(1.0, -0.3);
     drawUtensils(1.2, 0.3);
@@ -916,35 +958,36 @@ function init() {
 
 // ==================== INPUT HANDLING ====================
 window.addEventListener("keydown", function(e) {
-    
     switch (e.key) {
-        case "y": case "Y": chairRotY += 0.05; break; // Rotate chair clockwise
-        case "x": case "X": chairRotY -= 0.05; break;// Rotate chair counter-clockwise
-        case "a": case "A": if(chairPos.x > 1.4) chairPos.x -= 0.05; break;// Pmoves forward
-        case "d": case "D": chairPos.x += 0.05; break;// Move backward
-        case "w": case "W": chairPos.z -= 0.05; break;//   Move right
-        case "s": case "S": chairPos.z += 0.05; break;// Move left
-        case "q": case "Q": chairPos.y += 0.05; break; // move up
-        case "e": case "E": chairPos.y -= 0.05; break;// move down
-        case "z": case "Z": chairScale = Math.max(0.3, chairScale - 0.05); break;  // Scale down
-        case "c": case "C": chairScale = Math.min(2.0, chairScale + 0.05); break;   // Scale up
-        case "i": case "I": camRadius -= 0.1; break; // zoom in
-        case "o": case "O": camRadius += 0.1; break; // zoom out
-        case "r": case "R": // teset chair and camera position
+
+        case "y": case "Y": chairRotY += 0.05; break;
+        case "x": case "X": chairRotY -= 0.05; break;
+        case "a": case "A": if(chairPos.x > 1.4) chairPos.x -= 0.05; break;
+        case "d": case "D": chairPos.x += 0.05; break;
+        case "w": case "W": chairPos.z -= 0.05; break;
+        case "s": case "S": chairPos.z += 0.05; break;
+        case "q": case "Q": chairPos.y += 0.05; break;
+        case "e": case "E": chairPos.y -= 0.05; break;
+        case "z": case "Z": chairScale = Math.max(0.3, chairScale - 0.05); break;
+        case "c": case "C": chairScale = Math.min(2.0, chairScale + 0.05); break;
+        case "l": case "L": toggleLights(); break;
+        case "i": case "I": camRadius -= 0.1; break;
+        case "o": case "O": camRadius += 0.1; break;
+        case "r": case "R":
             camAngleX = 0.5;
             camAngleY = 0.5;
             camRadius = 2.2;
             chairPos = { x: 2.0, y: 0, z: 0 };
-            chairScale = 1.0;  // Reset scale
-            chairRotY = Math.PI/2;  // Reset rotation
+            chairScale = 1.0;
+            chairRotY = Math.PI/2;
             break;
-        case "ArrowLeft": camAngleX -= 0.05; break; // rotate camera left
-        case "ArrowRight": camAngleX += 0.05; break;// rotate camera right
-        case "ArrowUp": camAngleY += 0.05; break; // rotate camera up
-        case "ArrowDown": camAngleY -= 0.05; break;// rotate camera down
+        case "ArrowLeft": camAngleX -= 0.05; break;
+        case "ArrowRight": camAngleX += 0.05; break;
+        case "ArrowUp": camAngleY += 0.05; break;
+        case "ArrowDown": camAngleY -= 0.05; break;
     }
 
-    camAngleY = Math.min(Math.max(camAngleY, -Math.PI / 2 + 0.1), Math.PI / 2 - 0.1);
+    camAngleY = Math.min(Math.max(camAngleY, -Math.PI/2 + 0.1), Math.PI/2 - 0.1);
     render();
 });
 
